@@ -8,7 +8,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 
@@ -85,8 +84,11 @@ public class ProxyLight {
 											if (p==null || !p.isAlive()) {
 												p = new RequestProcessor() {
 													@Override
-													public void log(String message, Throwable t) {
-														ProxyLight.this.log(message, t);
+													public void error(String message, Throwable t) {
+														ProxyLight.this.error(message, t);
+													}
+													public void debug(String message) {
+														ProxyLight.this.debug(message);
 													}
 
 													@Override
@@ -118,7 +120,7 @@ public class ProxyLight {
 												// On s'est arrete ...
 												return;
 											}
-											log(null, t);
+											error(null, t);
 										}
 
 									} 
@@ -128,7 +130,7 @@ public class ProxyLight {
 					} catch (ClosedSelectorException cse) {
 						// Normal
 					} catch (Throwable t) {
-						log(null, t);
+						error(null, t);
 					} finally {
 						running=false;
 					}
@@ -156,11 +158,11 @@ public class ProxyLight {
 				processors.pop().shutdown();
 			}
 		} catch (Exception e) {
-			log(null, e);
+			error(null, e);
 		} 
 	}
 		
-	public void log(String message, Throwable t) {
+	public void error(String message, Throwable t) {
 		if (message!=null) {
 			System.err.println(message);
 		}
@@ -168,7 +170,13 @@ public class ProxyLight {
 			t.printStackTrace();
 		}
 	}
-	
+
+	public void debug(String message) {
+		if (message!=null) {
+			System.err.println(message);
+		}
+	}
+
 	public boolean isRunning() {
 		return running;
 	}
