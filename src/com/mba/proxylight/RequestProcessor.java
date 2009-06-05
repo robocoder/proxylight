@@ -32,7 +32,8 @@ public abstract class RequestProcessor {
 	private Map<String, Socket> outSockets = new HashMap<String, Socket>();
 	private Socket currentOutSocket = null;
 
-	private static byte[] CONNECT_OK = "HTTP/1.0 200 Connection established\nProxy-agent: ProxyLight\n\n".getBytes();
+	private static final String CRLF = "\r\n";
+	private static final byte[] CONNECT_OK = ("HTTP/1.0 200 Connection established"+CRLF+"Proxy-agent: ProxyLight"+CRLF+CRLF).getBytes();
 
 	private enum REQUEST_STEP {
 		STATUS_LINE, REQUEST_HEADERS, REQUEST_CONTENT, TRANSFER
@@ -95,8 +96,7 @@ public abstract class RequestProcessor {
 											}
 											if (so == currentOutSocket) {
 												currentOutSocket = null;
-												// prb : je ne sais pas si j'ai
-												// répondu ....
+												// prb : je ne sais pas si j'ai répondu ....
 											}
 										}
 									}
@@ -119,8 +119,7 @@ public abstract class RequestProcessor {
 												readBuffer.clear();
 												int numRead = read(inSocket, readBuffer, now);
 												if (numRead == -1) {
-													// Socket fermee ... On se
-													// barre
+													// Socket fermee ... On se barre
 													closeAll();
 													break;
 												}
@@ -139,8 +138,7 @@ public abstract class RequestProcessor {
 															if (s != null) {
 																if (s.length() == 0) {
 
-																	// D'abord,
-																	// on filtre
+																	// D'abord, on filtre
 																	if (filterRequest(request)) {
 																		throw new Exception("Requete interdite.");
 																	}
@@ -156,12 +154,8 @@ public abstract class RequestProcessor {
 																	String oh = request.getHost() + ":" + request.getPort();
 																	Socket outSocket = outSockets.get(oh);
 																	if (outSocket == null) {
-																		// On se
-																		// connecte
-																		// a la
-																		// destination
-																		// en
-																		// synchrone
+																		// On se connecte a la destination
+																		// en synchrone
 																		outSocket = new Socket();
 																		outSocket.socket = SocketChannel.open();
 																		outSocket.socket.configureBlocking(false);
@@ -177,36 +171,23 @@ public abstract class RequestProcessor {
 																	currentOutSocket = outSocket;
 
 																	if (isConnect) {
-																		// On
-																		// répond
-																		// un
-																		// header
-																		// standard
-																		// et on
-																		// connect
-																		// les
-																		// deux
-																		// sockets
+																		// On répond un header standard et on  connect
+																		// les deux sockets
 																		ByteBuffer b = ByteBuffer.wrap(CONNECT_OK);
 																		write(inSocket, b, now);
 																		step = REQUEST_STEP.TRANSFER;
 																	} else {
-																		// Envoyer
-																		// la
-																		// requete
-																		// et
-																		// les
-																		// headers
+																		// Envoyer la requete et les headers
 																		StringBuffer send = new StringBuffer(request.getMethod()).append(" ");
 																		String url = request.getUrl();
 																		if (!url.startsWith("/")) {
 																			url = url.substring(url.indexOf('/', 8));
 																		}
-																		send.append(url).append(" ").append(request.getProtocol()).append("\n");
+																		send.append(url).append(" ").append(request.getProtocol()).append(CRLF);
 																		for (Entry<String, String> h : request.getHeaders().entrySet()) {
-																			send.append(h.getKey()).append(": ").append(h.getValue()).append("\n");
+																			send.append(h.getKey()).append(": ").append(h.getValue()).append(CRLF);
 																		}
-																		send.append("\n");
+																		send.append(CRLF);
 																		byte[] sendBytes = send.toString().getBytes(); // TEMP
 																		// ...
 																		ByteBuffer b = ByteBuffer.wrap(sendBytes);
@@ -235,32 +216,22 @@ public abstract class RequestProcessor {
 												}
 											} else {
 												if (socket != currentOutSocket) {
-													// Pas de raison qu'il y ai
-													// de l'activité sur autre
-													// chose que le socket en
-													// cours. On ferme.
+													// Pas de raison qu'il y ai de l'activité sur autre
+													// chose que le socket en cours. On ferme.
 													closeOutSocket(socket);
 
 												} else {
-													if (key.isReadable()) {
-														// Transférer tel que a
-														// inSocket
-														if (!transfer(socket, inSocket, now)) {
-															// En mode
-															// "Connect", on
-															// ferme tout.
-															if ("CONNECT".equals(request.getMethod())) {
-																closeAll();
-															} else {
-																// On ferme
-																// uniquement la
-																// socket en
-																// cours
-																closeOutSocket(socket);
-																currentOutSocket = null;
-															}
-															break;
+													// Transférer tel que a inSocket
+													if (!transfer(socket, inSocket, now)) {
+														// En mode "Connect", on ferme tout.
+														if ("CONNECT".equals(request.getMethod())) {
+															closeAll();
+														} else {
+															// On ferme uniquement la socket en cours
+															closeOutSocket(socket);
+															currentOutSocket = null;
 														}
+														break;
 													}
 												}
 											}
