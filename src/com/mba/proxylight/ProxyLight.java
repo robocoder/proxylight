@@ -1,14 +1,20 @@
 package com.mba.proxylight;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
+
+import javax.naming.NameNotFoundException;
 
 
 public class ProxyLight {
@@ -110,6 +116,10 @@ public class ProxyLight {
 													public int getRemoteProxyPort() {
 														return ProxyLight.this.getRemoteProxyPort();
 													}
+													@Override
+													public InetAddress resolve(String host) {
+														return ProxyLight.this.resolve(host);
+													}
 													
 												};
 											}
@@ -142,6 +152,27 @@ public class ProxyLight {
 		t.start();
 	}
 	
+	/**
+	 * This method is to cache hostname resolution.
+	 * Java should have it's own cache so I'm not sure it's really useful ...
+	 */
+	private Map<String, InetAddress> ipCache = new HashMap<String, InetAddress>();
+	protected InetAddress resolve(String host) {
+		InetAddress retour = ipCache.get(host);
+		if (retour==null) {
+	        try {
+	            retour = InetAddress.getByName(host);
+	            ipCache.put(host, retour);
+	            
+	        } catch (UnknownHostException uhe) {
+	        	return null;
+			} catch (Throwable t) {
+				error("", t);
+			}
+	     }
+		return retour;
+	}
+
 	public void stop() {
 		if (!running) {
 			return;

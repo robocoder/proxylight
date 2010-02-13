@@ -1,6 +1,7 @@
 package com.mba.proxylight;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -159,7 +160,7 @@ public abstract class RequestProcessor {
 																		outSocket = new Socket();
 																		outSocket.socket = SocketChannel.open();
 																		outSocket.socket.configureBlocking(false);
-																		if (!outSocket.socket.connect(new InetSocketAddress(request.getHost(), request.getPort()))) {
+																		if (!outSocket.socket.connect(new InetSocketAddress(resolve(request.getHost()), request.getPort()))) {
 																			do {
 																				Thread.sleep(50);
 																			} while (!outSocket.socket.finishConnect());
@@ -423,4 +424,6 @@ public abstract class RequestProcessor {
 	public abstract String getRemoteProxyHost();
 
 	public abstract int getRemoteProxyPort();
+	
+	public abstract InetAddress resolve(String host);
 }
