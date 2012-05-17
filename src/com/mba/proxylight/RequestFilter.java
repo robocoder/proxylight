@@ -2,8 +2,10 @@ package com.mba.proxylight;
 
 public interface RequestFilter {
 
-	/**
-	 * Retourne true si le proxy ne doit meme pas repondre ...
-	 */
+  /**
+   * Filter request
+   * @param request
+   * @return true if proxy should filter/block the request
+   */
 	public boolean filter(Request request);
 }

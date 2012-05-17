@@ -7,18 +7,12 @@ import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
-import javax.naming.NameNotFoundException;
+import java.util.*;
 
 
 public class ProxyLight {
-	
+
+
 	/* le port */
 	private int port = 8080;
 	
@@ -107,7 +101,11 @@ public class ProxyLight {
 														return ProxyLight.this.getRequestFilters();
 													}
 
-													@Override
+                          public List<ResponseFilter> getResponseFilters() {
+                            return ProxyLight.this.getResponseFilters();
+                          }
+
+                          @Override
 													public String getRemoteProxyHost() {
 														return ProxyLight.this.getRemoteProxyHost();
 													}
@@ -252,9 +250,14 @@ public class ProxyLight {
 		}
 	}
 	
-	private List<RequestFilter> filters = new ArrayList<RequestFilter>();
+	private List<RequestFilter> requestFilters = new ArrayList<RequestFilter>();
 	public List<RequestFilter> getRequestFilters() {
-		return filters;
+		return requestFilters;
+	}
+
+  private List<ResponseFilter> responseFilters = new ArrayList<ResponseFilter>();
+	public List<ResponseFilter> getResponseFilters() {
+		return responseFilters;
 	}
 
 }
